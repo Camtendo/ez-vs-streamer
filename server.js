@@ -29,6 +29,7 @@ app.get('/update-twitch/:player1/:player2', async (req, res) => {
     const channel = await twitchClient.kraken.channels.getMyChannel();
     twitchClient.kraken.channels.updateChannel(channel, {status: newTitle});
 
+    console.log('Twitch channel successfully updated');
     res.sendStatus(200);
 });
 
