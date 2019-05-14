@@ -2,13 +2,13 @@ var playerOne = "";
 var playerTwo = "";
 
 $('button').click(() => {
-    console.log('clicked');
     onButtonClick();
 });
 
 function serverRequests() {
     if (!playerOne || !playerTwo) {
         alert('Invalid input!');
+        return;
     }
 
     $.get(`/update-twitch/${playerOne}/${playerTwo}`).done(() => {
