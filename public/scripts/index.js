@@ -9,10 +9,10 @@ function serverRequests() {
         return;
     }
 
+    disableButtonTemporarily();
     $.get(`/update-twitch/${playerOne}/${playerTwo}`).done(() => {
         $.get(`/notify-slack/${playerOne}/${playerTwo}`).done(() => {
             updateMarquee(playerOne, playerTwo);
-            disableButtonTemporarily();
         }).fail(() => {
             alert('Posting to Slack failed!');
         });
