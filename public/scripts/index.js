@@ -1,11 +1,9 @@
-var playerOne = "";
-var playerTwo = "";
-
-$('button').click(() => {
-    onButtonClick();
-});
+$('button').click(serverRequests);
 
 function serverRequests() {
+    var playerOne = $('#playerOneInput').val();
+    var playerTwo = $('#playerTwoInput').val();
+
     if (!playerOne || !playerTwo) {
         alert('Invalid input!');
         return;
@@ -13,29 +11,24 @@ function serverRequests() {
 
     $.get(`/update-twitch/${playerOne}/${playerTwo}`).done(() => {
         $.get(`/notify-slack/${playerOne}/${playerTwo}`).done(() => {
-            updateMarquee();
+            updateMarquee(playerOne, playerTwo);
+            disableButtonTemporarily();
         }).fail(() => {
             alert('Posting to Slack failed!');
-        }).fail(() =>{ 
-            alert('Updating Twitch failed!');
         });
-    })
+    }).fail(() =>{ 
+        alert('Updating Twitch failed!');
+    });
 }
 
-function onButtonClick() {
-    updateDisplay();
-    serverRequests();
-}
-
-function updateDisplay() {
-    var p1 = $('#playerOneInput').val();
-    var p2 = $('#playerTwoInput').val();
-
-    playerOne = p1;
-    playerTwo = p2;
-}
-
-function updateMarquee() {
+function updateMarquee(playerOne, playerTwo) {
     var newString = `${playerOne} vs. ${playerTwo}`;
     $('marquee').text(newString);
+}
+
+function disableButtonTemporarily() {
+    $('button').prop('disabled', true);
+    setTimeout(function() {
+        $('button').prop('disabled', false);
+    }, 10000);
 }
