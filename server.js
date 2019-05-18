@@ -22,7 +22,6 @@ var port = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, 'public')));
 
 console.log(`Starting ez-vs-streamer on port ${port}...`);
-console.log(`Using config with ${config} keys`);
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname + '/index.html')));
 
@@ -49,6 +48,8 @@ app.get('/notify-slack/:player1/:player2', (req, res) => {
       slackBot.postMessageToChannel(config.slackRoomName, urlMessage, params);
     });
   }
+  
+  console.log('Posted to Slack');
   res.sendStatus(200);
 });
 
