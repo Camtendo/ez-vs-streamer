@@ -13,3 +13,5 @@ An easy way to get stream information updated for a competitive game and notify 
 3. Input the names of the two players in the text inputs then click `Update and Post`. This will update the linked Twitch channel and post in the Slack channel. The scrolling text will also update to indicate you were successful.
 4. Click `Start Streaming` to have OBS begin streaming.
 5. Click `Stop Streaming` to have OBS end streaming.
+
+![](https://cdn.discordapp.com/attachments/384193390771699712/579399099057569803/unknown.png)
