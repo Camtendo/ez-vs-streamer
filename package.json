@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.16.4",
+    "obs-websocket-js": "^3.0.0",
     "slack": "^11.0.2",
     "slackbots": "^1.2.0",
     "twitch": "^2.2.3"
