@@ -19,11 +19,11 @@ let twitchClient;
 
 
 var port = process.env.PORT || 3000;
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'build')));
 
 console.log(`Starting ez-vs-streamer on port ${port}...`);
 
-app.get('/', (req, res) => res.sendFile(path.join(__dirname + '/index.html')));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname + '\\build\\index.html')));
 
 app.get('/update-twitch/:player1/:player2', async (req, res) => {
   const newTitle = `${req.params.player1} vs. ${req.params.player2}`;
@@ -35,18 +35,13 @@ app.get('/update-twitch/:player1/:player2', async (req, res) => {
 });
 
 app.get('/notify-slack/:player1/:player2', (req, res) => {
-  var message = `A new match is about to begin! ${req.params.player1} vs. ${req.params.player2}`;
-  var urlMessage = `Watch it on ${config.twitchChannelUrl}`;
+  var message = `A new match is about to begin! ${req.params.player1} vs. ${req.params.player2} \n Watch it on ${config.twitchChannelUrl}`;
 
   var params = { icon_emoji: ':finalsmash:' };
   if (config.isDebug) {
-    slackBot.postMessageToUser(config.slackTestUsername, message, params, () => {
-      slackBot.postMessageToUser(config.slackTestUsername, urlMessage, params);
-    });
+    slackBot.postMessageToUser(config.slackTestUsername, message, params);
   } else {
-    slackBot.postMessageToChannel(config.slackRoomName, message, params, () => {
-      slackBot.postMessageToChannel(config.slackRoomName, urlMessage, params);
-    });
+    slackBot.postMessageToChannel(config.slackRoomName, message, params);
   }
   
   console.log('Posted to Slack');

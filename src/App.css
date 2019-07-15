@@ -1,0 +1,45 @@
+#main-container {
+  display: grid;
+  width: 100vw;
+  height: 100vh;
+  background-color: black;
+  color: white;
+}
+
+.marquee-row {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: flex-end;
+}
+
+.input-row {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.button-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+marquee {
+  font-size: 48px;
+}
+
+button:first-of-type {
+  margin-right: 30px;
+}
+
+button {
+  width: 20rem;
+}
+
+.input-lg {
+  font-size: 24px;
+}
+
+label, input {
+  display: block;
+}
