@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { NotificationContainer, NotificationManager } from 'react-notifications';
+import OBSWebSocket from 'obs-websocket-js';
 import axios from 'axios'
 import './App.css';
 
@@ -10,8 +11,30 @@ class App extends Component {
             playerOne: '',
             playerTwo: '',
             isStreaming: false,
-            disableButtons: false
+            disableButtons: false,
         }
+    }
+
+    async componentDidMount() {
+        const obs = new OBSWebSocket()
+        await obs.connect({ address: 'localhost:4444' })
+
+        obs.onConnectionOpened(() => {
+            console.log("open")
+        })
+        /*
+        obs.on('error', err => {
+            console.error('socket error:', err);
+        });
+
+        obs.on('RecordingStarted', (data) => {
+            console.log('Recording started')
+        });
+
+        obs.on('RecordingStopped', (data) => {
+            console.log('Recording stopped')
+        });
+        */
     }
 
     onPlayerOneChange = (playerOne) => {
@@ -105,7 +128,7 @@ class App extends Component {
 
                 <NotificationContainer/>
             </div>
-          );
+        );
     }
 }
 
@@ -113,9 +136,31 @@ export default App;
 
 
 
+/*
+app.get('/obs/streaming-status', async (req, res) => {
+  var status = await obs.send('GetStreamingStatus');
+  res.json(status);
+});
+
+app.get('/obs/set-streaming/:shouldStream', async (req, res) => {
+  const shouldStream = req.params.shouldStream;
+  let streaming = false;
+
+  if (shouldStream === 'true') {
+    console.log('Attempting to start streaming...');
+    streaming = await obs.send('StartStreaming')
+  } else {
+    console.log('Attempting to stop streaming...');
+    streaming = await obs.send('StopStreaming');
+  }
+
+  res.json(streaming);
+});
 
 
-/* 
+*/
+
+/*
 let isStreaming = false;
 
 getOBSStatus();

@@ -2,7 +2,6 @@ const express = require('express');
 var path = require('path');
 const TwitchClient = require('twitch').default;
 var SlackBot = require('slackbots');
-var OBSWebSocket = require('obs-websocket-js');
 var config = require('./config.json');
 
 const app = express();
@@ -10,7 +9,6 @@ const slackBot = new SlackBot({
   token: config.slackToken,
   name: config.slackBotName
 });
-const obs = new OBSWebSocket();
 
 let twitchClient;
 (async () => {
@@ -46,36 +44,6 @@ app.get('/notify-slack/:player1/:player2', (req, res) => {
   
   console.log('Posted to Slack');
   res.sendStatus(200);
-});
-
-obs.connect()
-  .then(() => {
-    console.log('Connected to OBS successfully');
-    return obs.send('GetVersion');
-  });
-
-obs.on('error', err => {
-  console.error('socket error:', err);
-});
-
-app.get('/obs/streaming-status', async (req, res) => {
-  var status = await obs.send('GetStreamingStatus');
-  res.json(status);
-});
-
-app.get('/obs/set-streaming/:shouldStream', async (req, res) => {
-  const shouldStream = req.params.shouldStream;
-  let streaming = false;
-
-  if (shouldStream === 'true') {
-    console.log('Attempting to start streaming...');
-    streaming = await obs.send('StartStreaming')
-  } else {
-    console.log('Attempting to stop streaming...');
-    streaming = await obs.send('StopStreaming');
-  }
-
-  res.json(streaming);
 });
 
 app.listen(port);
