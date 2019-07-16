@@ -12,10 +12,16 @@
   align-items: flex-end;
 }
 
-.input-row {
+.player-input-row {
   display: flex;
   justify-content: space-evenly;
   align-items: center;
+}
+
+.secondary-input-row {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: baseline;
 }
 
 .button-row {
