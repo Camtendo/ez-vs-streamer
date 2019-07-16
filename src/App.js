@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { NotificationContainer, NotificationManager } from 'react-notifications';
-import OBSWebSocket from 'obs-websocket-js';
 import axios from 'axios'
 import './App.css';
+import socketIOClient from "socket.io-client";
 
 class App extends Component {
     constructor(props) {
@@ -12,29 +12,41 @@ class App extends Component {
             playerTwo: '',
             isStreaming: false,
             disableButtons: false,
+            socket: socketIOClient("http://localhost:3001"),
         }
     }
 
-    async componentDidMount() {
-        const obs = new OBSWebSocket()
-        await obs.connect({ address: 'localhost:4444' })
+    componentDidMount() {
+        var {socket} = this.state;
+        this.getInitialOBSStatus();
 
-        obs.onConnectionOpened(() => {
-            console.log("open")
-        })
-        /*
-        obs.on('error', err => {
-            console.error('socket error:', err);
+        socket.on('connect', () => {
+            NotificationManager.success('Connected to server successfully!');
         });
 
-        obs.on('RecordingStarted', (data) => {
-            console.log('Recording started')
+        socket.on('connect_error', () => {
+            NotificationManager.error('Not connected to server! Try refreshing!');
         });
 
-        obs.on('RecordingStopped', (data) => {
-            console.log('Recording stopped')
+        socket.on('ConnectionClosed', (data) => {
+            console.log(data);
+            NotificationManager.error('Server lost connection to OBS!');
         });
-        */
+
+        socket.on('ConnectionOpened', (data) => {
+            console.log(data);
+            NotificationManager.success('Server connected to OBS successfully!');
+        });
+
+        socket.on('StreamStarted', (data) => {
+            console.log(data);
+            this.setState({isStreaming: true});
+        });
+
+        socket.on('StreamStopped', (data) => {
+            console.log(data);
+            this.setState({isStreaming: false});
+        });
     }
 
     onPlayerOneChange = (playerOne) => {
@@ -86,8 +98,39 @@ class App extends Component {
         }, 2000)
     }
 
+    getInitialOBSStatus = () => {
+        axios.get(`/obs/streaming-status`).then(result => {
+            const serverIsStreaming = result ? result.data.streaming || result.data.recording : false;
+            NotificationManager.success(`Read initial streaming status as ${serverIsStreaming}`);
+            this.setState({isStreaming: serverIsStreaming});
+        }).catch(() => {
+            NotificationManager.error('Unable to request initla OBS status');
+        });
+    }
+
+    setOBSStreamingStatus = () => {
+        const {isStreaming} = this.state;
+        var newStatus = !isStreaming;
+
+        axios.get(`/obs/set-streaming/${newStatus}`).then((result) => {
+            this.disableButtonsTemporarily()
+        }).catch(() => {
+            NotificationManager.error('Unable to set OBS streaming status');
+        });
+    }
+
     render() {
-        const { disableButtons, playerOne, playerTwo } = this.state;
+        const { disableButtons, playerOne, playerTwo, isStreaming } = this.state;
+
+        const streamingButton = isStreaming ? 
+        (<button 
+            className="btn btn-danger btn-lg"
+            disabled={disableButtons}
+            onClick={this.setOBSStreamingStatus}>Stop Streaming</button>) : 
+        (<button 
+            className="btn btn-secondary btn-lg"
+            disabled={disableButtons}
+            onClick={this.setOBSStreamingStatus}>Start Streaming</button>);
 
         return (
             <div id="main-container">
@@ -120,10 +163,7 @@ class App extends Component {
                         className="btn btn-primary btn-lg"
                         disabled={disableButtons}
                         onClick={this.updateAndPost}>Update and Post</button>
-                    <button 
-                        className="btn btn-secondary btn-lg"
-                        disabled={disableButtons}
-                        onClick={this.startStreaming}>Start Streaming</button>
+                    {streamingButton}
                 </div>
 
                 <NotificationContainer/>
@@ -133,70 +173,3 @@ class App extends Component {
 }
 
 export default App;
-
-
-
-/*
-app.get('/obs/streaming-status', async (req, res) => {
-  var status = await obs.send('GetStreamingStatus');
-  res.json(status);
-});
-
-app.get('/obs/set-streaming/:shouldStream', async (req, res) => {
-  const shouldStream = req.params.shouldStream;
-  let streaming = false;
-
-  if (shouldStream === 'true') {
-    console.log('Attempting to start streaming...');
-    streaming = await obs.send('StartStreaming')
-  } else {
-    console.log('Attempting to stop streaming...');
-    streaming = await obs.send('StopStreaming');
-  }
-
-  res.json(streaming);
-});
-
-
-*/
-
-/*
-let isStreaming = false;
-
-getOBSStatus();
-setInterval(getOBSStatus, 500);
-
-function getOBSStatus() {
-    $.get(`/obs/streaming-status`).done((result) => {
-        if (result.streaming != isStreaming) {
-            console.log(`Updated streaming status to ${result.streaming}`);
-            updateStreamingButton(result.streaming);
-        }
-        isStreaming = result.streaming;
-    }).fail(() => {
-        console.log('Unable to request OBS status');
-    });
-}
-
-function toggleOBSStreaming() {
-    disableButtonsTemporarily();
-    $.get(`/obs/set-streaming/${!isStreaming}`).done((result) => {
-        updateStreamingButton(isStreaming);
-    }).fail(() => {
-        console.log('Unable to toggle OBS streaming');
-    });
-}
-
-function updateStreamingButton(currentlyStreaming) {
-    var streamButton = $('#stream-btn');
-    if (currentlyStreaming) {
-        streamButton.removeClass('btn-secondary');
-        streamButton.addClass('btn-danger');
-        streamButton.text('Stop Streaming');
-    } else {
-        streamButton.removeClass('btn-danger');
-        streamButton.addClass('btn-secondary');
-        streamButton.text('Start Streaming');
-    }
-}
-*/
