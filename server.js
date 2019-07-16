@@ -28,8 +28,11 @@ console.log(`Starting ez-vs-streamer on port ${port}...`);
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname + '\\build\\index.html')));
 
-app.get('/update-twitch/:player1/:player2', async (req, res) => {
-  const newTitle = `${req.params.player1} vs. ${req.params.player2}`;
+app.get('/update-twitch/:player1/:player2/:playerGroup', async (req, res) => {
+  const groupPrefix = !!req.params.playerGroup && req.params.playerGroup !== "null" ? 
+    `Group ${req.params.playerGroup}: ` : 
+    '';
+  const newTitle = `${groupPrefix}${req.params.player1} vs. ${req.params.player2}`;
   const channel = await twitchClient.kraken.channels.getMyChannel();
   twitchClient.kraken.channels.updateChannel(channel, { status: newTitle });
 
@@ -37,8 +40,11 @@ app.get('/update-twitch/:player1/:player2', async (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/notify-slack/:player1/:player2', (req, res) => {
-  var message = `A new match is about to begin! ${req.params.player1} vs. ${req.params.player2} \n Watch it on ${config.twitchChannelUrl}`;
+app.get('/notify-slack/:player1/:player2/:playerGroup', (req, res) => {
+  const groupPrefix = !!req.params.playerGroup && req.params.playerGroup !== "null" ? 
+    `Group ${req.params.playerGroup}: ` : 
+    '';
+  var message = `A new match is about to begin! ${groupPrefix}${req.params.player1} vs. ${req.params.player2} \n Watch it on ${config.twitchChannelUrl}`;
 
   var params = { icon_emoji: ':finalsmash:' };
   if (config.isDebug) {

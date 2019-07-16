@@ -10,6 +10,7 @@ class App extends Component {
         this.state = {
             playerOne: '',
             playerTwo: '',
+            playerGroup: '',
             isStreaming: false,
             disableButtons: false,
             socket: socketIOClient("http://localhost:3001"),
@@ -60,30 +61,38 @@ class App extends Component {
         })
     }
 
+    onPlayerGroupChange = (playerGroup) => {
+        this.setState({
+            playerGroup: playerGroup.target.value
+        })
+    }
+
     updateAndPost = async () => {
-        const { playerOne, playerTwo } = this.state;
+        const { playerOne, playerTwo, playerGroup } = this.state;
 
         if (!playerOne || !playerTwo) {
             alert('Invalid input!');
             return;
         }
+
+        const grouping = playerGroup ? playerGroup : "null";
     
         this.disableButtonsTemporarily();
         try {
-            await axios.get(`/update-twitch/${playerOne}/${playerTwo}`)
+            await axios.get(`/update-twitch/${playerOne}/${playerTwo}/${grouping}`)
         } catch {
             NotificationManager.error('Error updating twitch')
             return;
         }
 
         try {
-            await axios.get(`/notify-slack/${playerOne}/${playerTwo}`)
+            await axios.get(`/notify-slack/${playerOne}/${playerTwo}/${grouping}`)
         } catch {
-            NotificationManager.error('Error sending slack notification')
+            NotificationManager.error('Error sending slack notification');
             return;
         }
 
-        NotificationManager.success('Slack Notification Sent')
+        NotificationManager.success('Notification sent to Twitch and Slack');
     }
 
     disableButtonsTemporarily = () => {
@@ -104,7 +113,7 @@ class App extends Component {
             NotificationManager.success(`Read initial streaming status as ${serverIsStreaming}`);
             this.setState({isStreaming: serverIsStreaming});
         }).catch(() => {
-            NotificationManager.error('Unable to request initla OBS status');
+            NotificationManager.error('Unable to request initial OBS status');
         });
     }
 
@@ -120,7 +129,7 @@ class App extends Component {
     }
 
     render() {
-        const { disableButtons, playerOne, playerTwo, isStreaming } = this.state;
+        const { disableButtons, playerOne, playerTwo, playerGroup, isStreaming } = this.state;
 
         const streamingButton = isStreaming ? 
         (<button 
@@ -140,7 +149,7 @@ class App extends Component {
                         <marquee>Please input the player names</marquee>
                     }
                 </div>
-                <div className="input-row">
+                <div className="player-input-row">
                     <div className="player-one">
                         <label>Player One</label>
                         <input 
@@ -158,6 +167,18 @@ class App extends Component {
                             onChange={this.onPlayerTwoChange}/>
                     </div>
                 </div>
+
+                <div className="secondary-input-row">
+                    <div className="player-group">
+                        <label>Group</label>
+                        <input 
+                            className="input-lg col-lg-12"
+                            placeholder="A, B, C, etc"
+                            value={playerGroup}
+                            onChange={this.onPlayerGroupChange}/>
+                    </div>
+                </div>
+
                 <div className="button-row">
                     <button 
                         className="btn btn-primary btn-lg"
