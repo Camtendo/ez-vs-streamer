@@ -12,7 +12,7 @@
   "author": "Camtendo",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "bootstrap": "^4.3.1",
     "express": "^4.16.4",
     "obs-websocket-js": "^3.1.0",
