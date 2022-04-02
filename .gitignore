@@ -61,4 +61,5 @@ typings/
 .next
 
 config.json
+tokens.json
 .DS_Store

@@ -78,17 +78,20 @@ class App extends Component {
         const grouping = playerGroup ? playerGroup : "null";
     
         this.disableButtonsTemporarily();
+
         try {
-            await axios.get(`/update-twitch/${playerOne}/${playerTwo}/${grouping}`)
+            console.log('posting to Slack');
+            await axios.get(`/notify-slack/${playerOne}/${playerTwo}/${grouping}`)
         } catch {
-            NotificationManager.error('Error updating twitch')
+            NotificationManager.error('Error sending slack notification');
             return;
         }
 
         try {
-            await axios.get(`/notify-slack/${playerOne}/${playerTwo}/${grouping}`)
+            console.log('posting to Twitch');
+            await axios.get(`/update-twitch/${playerOne}/${playerTwo}/${grouping}`)
         } catch {
-            NotificationManager.error('Error sending slack notification');
+            NotificationManager.error('Error updating twitch')
             return;
         }
 

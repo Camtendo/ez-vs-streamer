@@ -1,23 +1,55 @@
-const express = require('express');
-var path = require('path');
-const TwitchClient = require('twitch').default;
-var SlackBot = require('slackbots');
-var config = require('./config.json');
-var OBSWebSocket = require('obs-websocket-js');
+import { RefreshingAuthProvider } from '@twurple/auth';
+import { ApiClient } from '@twurple/api';
+import { promises as fs } from 'fs';
+import express  from 'express';
+import path from 'path';
+import SlackBot from 'slackbots';
+import OBSWebSocket from 'obs-websocket-js';
+import http from 'http';
+import socketio from 'socket.io';
+
+const __dirname = path.resolve();
+
+let slackBot;
+(async () => {
+  const config = JSON.parse(await fs.readFile('./config.json', 'utf-8'));
+  slackBot = new SlackBot({
+    token: config.slackToken,
+    name: config.slackBotName
+  });
+})();
 
 const app = express();
-var http = require('http').createServer(app);
-var io = require('socket.io')(http);
-http.listen(3001);
-const slackBot = new SlackBot({
-  token: config.slackToken,
-  name: config.slackBotName
-});
+var httpServer = http.createServer(app);
+var io = socketio(httpServer);
+httpServer.listen(3001);
 
+let twitchAuthProvider;
 let twitchClient;
+
 (async () => {
-  twitchClient = await TwitchClient.withCredentials(config.twitchClientId, config.twitchOAuthToken);
-})();
+  const tokenData = JSON.parse(await fs.readFile('./tokens.json', 'UTF-8'));
+  const config = JSON.parse(await fs.readFile('./config.json', 'utf-8'));
+
+  try
+  {
+    twitchAuthProvider = new RefreshingAuthProvider(
+      {
+        clientId: config.twitchClientId,
+        clientSecret: config.twitchSecret,
+        onRefresh: async newTokenData => await fs.writeFile('./tokens.json', JSON.stringify(newTokenData, null, 4), 'UTF-8')
+      },
+      tokenData
+    );
+
+    twitchClient = new ApiClient({ authProvider: twitchAuthProvider });
+  }
+  catch(ex)
+  {
+    console.log(ex);
+  }
+  
+})(twitchClient);
 
 const obs = new OBSWebSocket();
 
@@ -33,14 +65,15 @@ app.get('/update-twitch/:player1/:player2/:playerGroup', async (req, res) => {
     `Group ${req.params.playerGroup}: ` : 
     '';
   const newTitle = `${groupPrefix}${req.params.player1} vs. ${req.params.player2}`;
-  const channel = await twitchClient.kraken.channels.getMyChannel();
-  twitchClient.kraken.channels.updateChannel(channel, { status: newTitle });
+  const twitchUser = await twitchClient.users.getMe();
+  twitchClient.channels.updateChannelInfo(twitchUser.id, { title: newTitle });
 
   console.log('Twitch channel successfully updated');
   res.sendStatus(200);
 });
 
-app.get('/notify-slack/:player1/:player2/:playerGroup', (req, res) => {
+app.get('/notify-slack/:player1/:player2/:playerGroup', async (req, res) => {
+  const config = JSON.parse(await fs.readFile('./config.json', 'utf-8'));
   const groupPrefix = !!req.params.playerGroup && req.params.playerGroup !== "null" ? 
     `Group ${req.params.playerGroup}: ` : 
     '';
