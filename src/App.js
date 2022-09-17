@@ -41,7 +41,6 @@ class App extends Component {
 
         socket.on('StreamStateChanged', (data) => {
             console.log(data);
-            debugger;
             this.setState({isStreaming: data.outputActive});
         });
     }
