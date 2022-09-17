@@ -18,7 +18,7 @@
     "axios": "^0.26.1",
     "bootstrap": "^4.3.1",
     "express": "^4.16.4",
-    "obs-websocket-js": "^3.1.0",
+    "obs-websocket-js": "5.0.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-notifications": "^1.4.3",

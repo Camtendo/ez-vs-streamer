@@ -39,14 +39,10 @@ class App extends Component {
             NotificationManager.success('Server connected to OBS successfully!');
         });
 
-        socket.on('StreamStarted', (data) => {
+        socket.on('StreamStateChanged', (data) => {
             console.log(data);
-            this.setState({isStreaming: true});
-        });
-
-        socket.on('StreamStopped', (data) => {
-            console.log(data);
-            this.setState({isStreaming: false});
+            debugger;
+            this.setState({isStreaming: data.outputActive});
         });
     }
 
@@ -112,7 +108,8 @@ class App extends Component {
 
     getInitialOBSStatus = () => {
         axios.get(`/obs/streaming-status`).then(result => {
-            const serverIsStreaming = result ? result.data.streaming || result.data.recording : false;
+            console.log(result);
+            const serverIsStreaming = result ? result.data.outputActive : false;
             NotificationManager.success(`Read initial streaming status as ${serverIsStreaming}`);
             this.setState({isStreaming: serverIsStreaming});
         }).catch(() => {

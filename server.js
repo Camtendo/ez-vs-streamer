@@ -9,9 +9,11 @@ import http from 'http';
 import socketio from 'socket.io';
 
 const __dirname = path.resolve();
+const outputName = 'simple_stream';
 
 let slackBot;
 (async () => {
+  console.log('Configuring Slack connection');
   const config = JSON.parse(await fs.readFile('./config.json', 'utf-8'));
   slackBot = new SlackBot({
     token: config.slackToken,
@@ -28,6 +30,7 @@ let twitchAuthProvider;
 let twitchClient;
 
 (async () => {
+  console.log('Configuring Twitch connection');
   const tokenData = JSON.parse(await fs.readFile('./tokens.json', 'UTF-8'));
   const config = JSON.parse(await fs.readFile('./config.json', 'utf-8'));
 
@@ -90,10 +93,24 @@ app.get('/notify-slack/:player1/:player2/:playerGroup', async (req, res) => {
   res.sendStatus(200);
 });
 
-obs.connect()
-  .then(() => {
-    console.log('Connected to OBS successfully');
-  });
+(async () => {
+  console.log('Configuring OBS web socket');
+  const config = JSON.parse(await fs.readFile('./config.json', 'utf-8'));
+
+  try
+  {
+    obs.connect('ws://127.0.0.1:4455', config.obsWebsocketPassword)
+    .then(() => {
+      console.log('Connected to OBS successfully');
+    });
+  }
+  catch(ex)
+  {
+    console.log(ex);
+  }
+  
+})();
+
 
 io.on('connection', (socket) => {
     console.log(`New client connected id=${socket.id}`);
@@ -102,24 +119,9 @@ io.on('connection', (socket) => {
       console.error('socket error:', err);
     });
     
-    obs.on('StreamStopped', data => {
-      console.log('Stream stopped!');
-      socket.emit('StreamStopped', data);
-    });
-    
-    obs.on('StreamStarted', data => {
-      console.log('Stream started!');
-      socket.emit('StreamStarted', data);
-    });
-    
-    obs.on('RecordingStarted', data => {
-      console.log('Recording Started!');
-      socket.emit('RecordingStarted', data);
-    });
-    
-    obs.on('RecordingStopped', data => {
-      console.log('Recording Stopped!');
-      socket.emit('RecordingStopped', data);
+    obs.on('StreamStateChanged', data => {
+      console.log(`Stream state updated. OutputActive=${data.outputActive}`);
+      socket.emit('StreamStateChanged', data);
     });
 
     obs.on('ConnectionOpened', data => {
@@ -138,7 +140,9 @@ io.on('connection', (socket) => {
 });
 
 app.get('/obs/streaming-status', async (req, res) => {
-  var status = await obs.send('GetStreamingStatus');
+  console.log('Fetching streaming status...');
+  var status = await obs.call('GetOutputStatus', {outputName: outputName});
+  console.log(status);
   res.json(status);
 });
 
@@ -148,10 +152,12 @@ app.get('/obs/set-streaming/:shouldStream', async (req, res) => {
 
   if (shouldStream === 'true') {
     console.log('Attempting to start streaming...');
-    streaming = await obs.send('StartStreaming')
+    await obs.call('StartOutput', {outputName: outputName});
+    streaming = true;
   } else {
     console.log('Attempting to stop streaming...');
-    streaming = await obs.send('StopStreaming');
+    await obs.call('StopOutput', {outputName: outputName});
+    streaming = false;
   }
 
   res.json(streaming);
