@@ -64,6 +64,7 @@ console.log(`Starting ez-vs-streamer on port ${port}...`);
 app.get('/', (req, res) => res.sendFile(path.join(__dirname + '\\build\\index.html')));
 
 app.get('/update-twitch/:player1/:player2/:playerGroup', async (req, res) => {
+   console.log('Attempting to post to Twitch');
   const groupPrefix = !!req.params.playerGroup && req.params.playerGroup !== "null" ? 
     `Group ${req.params.playerGroup}: ` : 
     '';
@@ -76,6 +77,7 @@ app.get('/update-twitch/:player1/:player2/:playerGroup', async (req, res) => {
 });
 
 app.get('/notify-slack/:player1/:player2/:playerGroup', async (req, res) => {
+  console.log('Attempting to post to Slack');
   const config = JSON.parse(await fs.readFile('./config.json', 'utf-8'));
   const groupPrefix = !!req.params.playerGroup && req.params.playerGroup !== "null" ? 
     `Group ${req.params.playerGroup}: ` : 
@@ -141,9 +143,15 @@ io.on('connection', (socket) => {
 
 app.get('/obs/streaming-status', async (req, res) => {
   console.log('Fetching streaming status...');
-  var status = await obs.call('GetOutputStatus', {outputName: outputName});
-  console.log(status);
-  res.json(status);
+  console.log(await obs.call('GetOutputList'));
+  try {
+    var status = await obs.call('GetOutputStatus', {outputName: outputName});
+    console.log(status);
+    res.json(status);
+  } catch (error) {
+    console.log('Unable to fetch output status, defaulting to false.');
+    res.json({outputActive: false});
+  }
 });
 
 app.get('/obs/set-streaming/:shouldStream', async (req, res) => {
@@ -152,11 +160,13 @@ app.get('/obs/set-streaming/:shouldStream', async (req, res) => {
 
   if (shouldStream === 'true') {
     console.log('Attempting to start streaming...');
-    await obs.call('StartOutput', {outputName: outputName});
+    // await obs.call('StartOutput', {outputName: outputName});
+     await obs.call('StartStream');
     streaming = true;
   } else {
     console.log('Attempting to stop streaming...');
-    await obs.call('StopOutput', {outputName: outputName});
+    // await obs.call('StopOutput', {outputName: outputName});
+    await obs.call('StopStream');
     streaming = false;
   }
 
