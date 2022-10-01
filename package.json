@@ -13,6 +13,7 @@
   "author": "Camtendo",
   "license": "ISC",
   "dependencies": {
+    "@slack/web-api": "^6.7.2",
     "@twurple/api": "^5.0.18",
     "@twurple/auth": "^5.0.18",
     "axios": "^0.26.1",
@@ -24,7 +25,6 @@
     "react-notifications": "^1.4.3",
     "react-scripts": "3.0.1",
     "slack": "^11.0.2",
-    "slackbots": "^1.2.0",
     "socket.io": "^2.4.1",
     "uws": "^10.148.1"
   },

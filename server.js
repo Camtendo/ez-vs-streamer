@@ -3,10 +3,10 @@ import { ApiClient } from '@twurple/api';
 import { promises as fs } from 'fs';
 import express  from 'express';
 import path from 'path';
-import SlackBot from 'slackbots';
 import OBSWebSocket from 'obs-websocket-js';
 import http from 'http';
 import socketio from 'socket.io';
+import { WebClient } from '@slack/web-api';
 
 const __dirname = path.resolve();
 const outputName = 'simple_stream';
@@ -15,10 +15,9 @@ let slackBot;
 (async () => {
   console.log('Configuring Slack connection');
   const config = JSON.parse(await fs.readFile('./config.json', 'utf-8'));
-  slackBot = new SlackBot({
-    token: config.slackToken,
-    name: config.slackBotName
-  });
+  slackBot = new WebClient(
+    config.slackToken,
+  );
 })();
 
 const app = express();
@@ -84,11 +83,11 @@ app.get('/notify-slack/:player1/:player2/:playerGroup', async (req, res) => {
     '';
   var message = `A new match is about to begin! ${groupPrefix}${req.params.player1} vs. ${req.params.player2} \n Watch it on ${config.twitchChannelUrl}`;
 
-  var params = { icon_emoji: ':finalsmash:' };
   if (config.isDebug) {
-    slackBot.postMessageToUser(config.slackTestUsername, message, params);
+    await slackBot.chat.postMessage({channel:config.slackTestUserId, text: message });
   } else {
-    slackBot.postMessageToChannel(config.slackRoomName, message, params);
+    // slackBot.postMessageToChannel(config.slackRoomName, message, params);
+    await slackBot.chat.postMessage({channel:config.slackRoomName, text: message });
   }
   
   console.log('Posted to Slack');
