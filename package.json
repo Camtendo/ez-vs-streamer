@@ -23,7 +23,7 @@
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-notifications": "^1.4.3",
-    "react-scripts": "3.0.1",
+    "react-scripts": "5.0.1",
     "slack": "^11.0.2",
     "socket.io": "^2.4.1",
     "uws": "^10.148.1"
